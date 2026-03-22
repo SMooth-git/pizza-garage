@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Pizza Garage | Salempur, Deoria</title>
+<meta name="description" content="Real Food, Real Flavour — Order pizzas, burgers, cold coffee, shakes & more from Pizza Garage, Salempur, Deoria."/>
+<meta name="theme-color" content="#c8001a"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Pizza Garage"/>
+<meta name="msapplication-TileColor" content="#c8001a"/>
+<meta name="msapplication-TileImage" content="icons/icon-144.png"/>
+<!-- Open Graph -->
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="Pizza Garage | Salempur, Deoria"/>
+<meta property="og:description" content="Real Food, Real Flavour — Pizzas, Burgers, Coffee & More!"/>
+<meta property="og:image" content="icons/icon-512.png"/>
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json"/>
+<!-- Apple Touch Icons -->
+<link rel="apple-touch-icon" href="icons/icon-152.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png"/>
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png"/>
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="96x96" href="icons/icon-96.png"/>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCNa6QzX98ZsR6IoNgZByFGzbx4tWUPguk",
+  authDomain: "pizza-garage-fb929.firebaseapp.com",
+  projectId: "pizza-garage-fb929",
+  storageBucket: "pizza-garage-fb929.firebasestorage.app",
+  messagingSenderId: "927270238065",
+  appId: "1:927270238065:web:571fb71986fb6079b828d0"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// expose saveOrder globally so confirmOrder() can call it
+window._saveOrderToFirebase = async function(orderData) {
+  try {
+    const ref = await addDoc(collection(db, 'orders'), {
+      ...orderData,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+    console.log('[Firebase] Order saved:', ref.id);
+    return ref.id;
+  } catch(e) {
+    console.warn('[Firebase] Save failed:', e.message);
+    return null;
+  }
+};
+</script>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Nunito:wght@400;600;700;800;900&family=Caveat:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --red:#c8001a;
+  --red2:#e8192c;
+  --yellow:#ffc200;
+  --orange:#ff7a00;
+  --cream:#fdf5e4;
+  --cream2:#fff9ee;
+  --brown:#3b1a08;
+  --brown2:#5c2d0e;
+  --tan:#c8976a;
+  --text:#2a1005;
+  --muted:#8a5c38;
+  --border:#e8d5b8;
+  --card:#fffaf0;
+  --green:#16a34a;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --ease2:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--cream);
+  color:var(--text);
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* ── GRAIN TEXTURE OVERLAY ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9997;opacity:.45;
+}
+
+/* ── CUSTOM CURSOR ── */
+#cur{width:12px;height:12px;background:var(--red2);border-radius:50%;position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);transition:width .2s,height .2s,opacity .2s;}
+#cur-ring{width:38px;height:38px;border:2px solid var(--yellow);border-radius:50%;position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-50%);opacity:.55;transition:width .25s,height .25s,opacity .2s;}
+.hov #cur{width:50px;height:50px;background:var(--red2);opacity:.15;}
+.hov #cur-ring{opacity:0;}
+
+/* ── LOADER ── */
+.loader{position:fixed;inset:0;z-index:9500;background:var(--brown);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;transition:opacity .8s var(--ease);}
+.loader.out{opacity:0;pointer-events:none;}
+.loader-emoji{font-size:3.5rem;animation:spin 1s linear infinite;}
+.loader-name{font-family:'Alfa Slab One',serif;font-size:2.2rem;color:var(--yellow);letter-spacing:1px;}
+.loader-name span{color:#fff;}
+.loader-track{width:180px;height:3px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden;}
+.loader-fill{height:100%;background:linear-gradient(90deg,var(--red2),var(--yellow));animation:loadFill 1.6s var(--ease) forwards;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+@keyframes loadFill{to{width:100%;}}
+
+/* ── HEADER ── */
+header{
+  position:fixed;top:0;inset-inline:0;z-index:800;
+  padding:.85rem 3rem;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:all .4s var(--ease2);
+}
+header.stuck{
+  background:rgba(59,26,8,.97);
+  backdrop-filter:blur(20px);
+  box-shadow:0 4px 30px rgba(0,0,0,.3);
+}
+.logo{
+  font-family:'Alfa Slab One',serif;
+  font-size:1.55rem;color:#fff;
+  text-decoration:none;letter-spacing:.5px;
+  display:flex;align-items:center;gap:.5rem;
+}
+.logo-emoji{font-size:1.4rem;}
+.logo span{color:var(--yellow);}
+.nav{display:flex;gap:1.8rem;align-items:center;}
+.nav a{
+  color:rgba(255,255,255,.7);text-decoration:none;
+  font-weight:700;font-size:.88rem;letter-spacing:.3px;
+  transition:color .2s;position:relative;
+}
+.nav a::after{content:'';position:absolute;bottom:-3px;left:0;right:0;height:2px;background:var(--yellow);border-radius:2px;transform:scaleX(0);transform-origin:right;transition:transform .3s var(--ease2);}
+.nav a:hover{color:var(--yellow);}
+.nav a:hover::after{transform:scaleX(1);transform-origin:left;}
+.cart-pill{
+  display:flex;align-items:center;gap:.5rem;
+  background:var(--red2);color:#fff;border:none;
+  border-radius:50px;padding:.55rem 1.3rem;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;
+  cursor:none;transition:all .25s var(--ease2);
+  box-shadow:0 4px 20px rgba(232,25,44,.4);
+  position:relative;overflow:hidden;
+}
+.cart-pill::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);transform:translateX(-100%);transition:transform .4s;}
+.cart-pill:hover::before{transform:translateX(0);}
+.cart-pill:hover{background:var(--red);transform:translateY(-2px);box-shadow:0 8px 28px rgba(232,25,44,.5);}
+#ccount{background:var(--yellow);color:var(--brown);border-radius:50%;width:20px;height:20px;font-size:.7rem;font-weight:900;display:flex;align-items:center;justify-content:center;transition:transform .2s var(--ease2);}
+.header-right{display:flex;align-items:center;gap:.7rem;}
+.install-nav-btn{
+  display:flex;align-items:center;gap:.45rem;
+  background:rgba(255,194,0,.12);
+  border:1.5px solid rgba(255,194,0,.4);
+  color:var(--yellow);
+  border-radius:50px;padding:.5rem 1.1rem;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;
+  cursor:none;transition:all .25s var(--ease2);
+  white-space:nowrap;
+  animation:installPulse 2.5s ease-in-out infinite;
+}
+.install-nav-btn:hover{
+  background:var(--yellow);color:var(--brown);
+  border-color:var(--yellow);
+  transform:translateY(-2px);
+  box-shadow:0 4px 18px rgba(255,194,0,.4);
+  animation:none;
+}
+@keyframes installPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,194,0,.0);}
+  50%{box-shadow:0 0 0 5px rgba(255,194,0,.2);}
+}
+
+/* ── HERO ── */
+.hero{
+  position:relative;
+  min-height:100vh;
+  background:var(--brown);
+  overflow:hidden;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:center;
+  z-index:1;
+}
+
+/* warm radial glow */
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 60%,rgba(200,0,26,.35) 0%,transparent 55%),
+    radial-gradient(ellipse at 75% 40%,rgba(255,122,0,.2) 0%,transparent 50%),
+    radial-gradient(ellipse at 50% 100%,rgba(59,26,8,1) 0%,transparent 60%);
+  z-index:0;
+}
+
+/* dotted pattern */
+.hero::after{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(255,194,0,.08) 1px,transparent 1px);
+  background-size:28px 28px;
+  z-index:0;
+}
+
+.hero-left{
+  position:relative;z-index:2;
+  padding:8rem 3rem 5rem 5vw;
+  display:flex;flex-direction:column;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(255,194,0,.15);
+  border:1.5px solid rgba(255,194,0,.35);
+  color:var(--yellow);font-size:.72rem;font-weight:800;
+  letter-spacing:2.5px;text-transform:uppercase;
+  padding:.35rem 1rem;border-radius:50px;
+  width:fit-content;margin-bottom:1.6rem;
+  animation:fadeUp .7s var(--ease) both;
+}
+.hero h1{
+  font-family:'Alfa Slab One',serif;
+  font-size:clamp(3rem,5.5vw,5.8rem);
+  color:#fff;line-height:1.0;
+  animation:fadeUp .8s .1s var(--ease) both;
+}
+.hero h1 .yell{color:var(--yellow);}
+.hero h1 .hand{
+  font-family:'Caveat',cursive;
+  font-size:clamp(2.4rem,4.5vw,4.8rem);
+  color:var(--yellow);
+  display:block;line-height:1.1;
+}
+.hero-sub{
+  color:rgba(255,255,255,.55);font-size:1rem;
+  margin:1.5rem 0 2.2rem;max-width:420px;line-height:1.8;
+  animation:fadeUp .9s .18s var(--ease) both;
+}
+.hero-btns{
+  display:flex;gap:.9rem;flex-wrap:wrap;
+  animation:fadeUp .9s .26s var(--ease) both;
+}
+.btn-fire{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:var(--red2);color:#fff;
+  border:none;border-radius:12px;
+  padding:.88rem 2rem;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;
+  cursor:none;text-decoration:none;
+  transition:all .28s var(--ease2);
+  box-shadow:0 6px 28px rgba(232,25,44,.45);
+  position:relative;overflow:hidden;
+}
+.btn-fire::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);transform:translateX(-110%);transition:transform .45s;}
+.btn-fire:hover::before{transform:translateX(0);}
+.btn-fire:hover{transform:translateY(-3px);background:var(--red);box-shadow:0 12px 36px rgba(232,25,44,.55);}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:transparent;color:var(--yellow);
+  border:2px solid rgba(255,194,0,.4);
+  border-radius:12px;padding:.86rem 2rem;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;
+  cursor:none;text-decoration:none;
+  transition:all .28s var(--ease2);
+}
+.btn-ghost:hover{background:var(--yellow);color:var(--brown);border-color:var(--yellow);transform:translateY(-3px);}
+
+.hero-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;margin-top:3rem;padding-top:2rem;
+  border-top:1px solid rgba(255,255,255,.1);
+  animation:fadeUp .9s .38s var(--ease) both;
+}
+.hstat{padding-right:1.5rem;border-right:1px solid rgba(255,255,255,.1);}
+.hstat:last-child{border-right:none;padding-right:0;}
+.hstat:not(:first-child){padding-left:1.5rem;}
+.hstat-n{font-family:'Alfa Slab One',serif;font-size:2rem;color:var(--yellow);line-height:1;}
+.hstat-l{font-size:.68rem;color:rgba(255,255,255,.38);letter-spacing:1.5px;text-transform:uppercase;margin-top:.3rem;}
+
+/* ── FOOD SCENE (hero right) ── */
+.hero-right{
+  position:relative;height:100%;min-height:600px;
+  z-index:2;display:flex;align-items:center;justify-content:center;
+}
+.food-scene{
+  position:relative;
+  width:520px;height:520px;
+  transform-style:preserve-3d;
+  transition:transform .08s linear;
+}
+/* ORB BASE */
+.food-orb{
+  position:absolute;
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  transform-style:preserve-3d;
+  cursor:none;
+}
+.orb-inner{
+  position:relative;border-radius:50%;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+  border:3px solid rgba(255,255,255,.15);
+  transition:transform .3s var(--ease2), box-shadow .3s;
+}
+.food-orb:hover .orb-inner{transform:scale(1.08);box-shadow:0 30px 80px rgba(0,0,0,.5);}
+.orb-inner img{width:100%;height:100%;object-fit:cover;display:block;}
+.orb-glow{
+  position:absolute;inset:-20%;border-radius:50%;
+  filter:blur(24px);opacity:.5;z-index:-1;
+  animation:glowPulse 2.5s ease-in-out infinite alternate;
+}
+.orb-glow-red{background:radial-gradient(circle,#e8192c,transparent 70%);}
+.orb-glow-amber{background:radial-gradient(circle,#ff7a00,transparent 70%);}
+.orb-glow-brown{background:radial-gradient(circle,#c87941,transparent 70%);}
+.orb-glow-yellow{background:radial-gradient(circle,#ffc200,transparent 70%);}
+.orb-glow-purple{background:radial-gradient(circle,#9333ea,transparent 70%);}
+@keyframes glowPulse{from{opacity:.4;transform:scale(.9);}to{opacity:.7;transform:scale(1.1);}}
+
+.orb-label{
+  background:rgba(255,255,255,.95);
+  border-radius:50px;padding:.3rem .8rem;
+  font-size:.72rem;font-weight:800;color:var(--brown);
+  white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.15);
+  opacity:0;transform:translateY(6px);
+  transition:opacity .25s,transform .25s;
+}
+.food-orb:hover .orb-label{opacity:1;transform:translateY(0);}
+
+/* POSITIONS & SIZES */
+.orb-center{
+  width:230px;height:230px;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  animation:floatCenter 4s ease-in-out infinite;
+  z-index:3;
+}
+.orb-center .orb-inner{width:230px;height:230px;}
+
+.orb-tl{
+  width:140px;height:140px;
+  top:4%;left:2%;
+  animation:floatTL 3.5s ease-in-out infinite;
+  z-index:2;
+}
+.orb-tl .orb-inner{width:140px;height:140px;}
+
+.orb-tr{
+  width:120px;height:120px;
+  top:8%;right:2%;
+  animation:floatTR 4.2s ease-in-out infinite;
+  z-index:2;
+}
+.orb-tr .orb-inner{width:120px;height:120px;}
+
+.orb-bl{
+  width:130px;height:130px;
+  bottom:5%;left:4%;
+  animation:floatBL 3.8s ease-in-out infinite;
+  z-index:2;
+}
+.orb-bl .orb-inner{width:130px;height:130px;}
+
+.orb-br{
+  width:125px;height:125px;
+  bottom:8%;right:3%;
+  animation:floatBR 4.5s ease-in-out infinite;
+  z-index:2;
+}
+.orb-br .orb-inner{width:125px;height:125px;}
+
+/* unique float paths for each */
+@keyframes floatCenter{
+  0%,100%{transform:translate(-50%,-50%) translateY(0) rotate(0deg);}
+  33%{transform:translate(-50%,-50%) translateY(-18px) rotate(2deg);}
+  66%{transform:translate(-50%,-50%) translateY(10px) rotate(-1.5deg);}
+}
+@keyframes floatTL{
+  0%,100%{transform:translateY(0) rotate(-5deg);}
+  50%{transform:translateY(-20px) rotate(5deg);}
+}
+@keyframes floatTR{
+  0%,100%{transform:translateY(0) rotate(8deg);}
+  50%{transform:translateY(-16px) rotate(-4deg);}
+}
+@keyframes floatBL{
+  0%,100%{transform:translateY(0) rotate(3deg);}
+  50%{transform:translateY(-22px) rotate(-6deg);}
+}
+@keyframes floatBR{
+  0%,100%{transform:translateY(0) rotate(-6deg);}
+  40%{transform:translateY(-14px) rotate(4deg);}
+  80%{transform:translateY(8px) rotate(-3deg);}
+}
+
+/* sparkles */
+.spark{
+  position:absolute;
+  color:var(--yellow);font-size:1rem;
+  animation:sparkFloat 3s ease-in-out infinite;
+  opacity:.7;pointer-events:none;
+  text-shadow:0 0 10px rgba(255,194,0,.8);
+}
+.s1{top:12%;left:38%;animation-delay:0s;font-size:1.3rem;}
+.s2{top:35%;right:14%;animation-delay:.6s;font-size:.8rem;}
+.s3{top:68%;left:32%;animation-delay:1.1s;font-size:1.1rem;}
+.s4{bottom:18%;right:28%;animation-delay:1.7s;font-size:.7rem;}
+.s5{top:20%;left:18%;animation-delay:.3s;font-size:.9rem;}
+.s6{bottom:30%;left:48%;animation-delay:2.1s;font-size:1.2rem;}
+@keyframes sparkFloat{
+  0%,100%{transform:translateY(0) scale(1);opacity:.5;}
+  50%{transform:translateY(-12px) scale(1.3);opacity:1;}
+}
+
+/* floating info cards */
+.fbadge{
+  position:absolute;z-index:5;
+  background:rgba(255,255,255,.96);
+  border-radius:16px;padding:.65rem 1rem;
+  box-shadow:0 8px 30px rgba(0,0,0,.2);
+  display:flex;align-items:center;gap:.55rem;
+  animation:badgeFloat 3.5s ease-in-out infinite;
+  pointer-events:none;
+}
+.fbadge.b1{bottom:24%;left:2%;animation-delay:0s;}
+.fbadge.b2{top:22%;right:3%;animation-delay:1.2s;}
+.fbadge.b3{bottom:14%;right:5%;animation-delay:2.3s;}
+.fbadge-ico{font-size:1.4rem;flex-shrink:0;}
+.fbadge-txt{font-size:.78rem;font-weight:800;color:var(--text);line-height:1.25;}
+.fbadge-sub{font-size:.68rem;color:var(--muted);font-weight:600;}
+@keyframes badgeFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+
+.scroll-cue{
+  position:absolute;bottom:2rem;left:5vw;z-index:5;
+  display:flex;align-items:center;gap:.7rem;opacity:.4;
+  animation:fadeUp 1s .55s var(--ease) both;
+}
+.scroll-cue span{font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:#fff;font-weight:700;}
+.scroll-line{width:36px;height:1.5px;background:linear-gradient(to right,var(--yellow),transparent);}
+
+/* ── SECTION HELPERS ── */
+.rv{opacity:0;transform:translateY(28px);transition:opacity .7s var(--ease),transform .7s var(--ease);}
+.rv.vis{opacity:1;transform:translateY(0);}
+.sec-label{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-size:.72rem;font-weight:800;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--red2);
+  margin-bottom:.6rem;
+}
+.sec-title{
+  font-family:'Alfa Slab One',serif;
+  font-size:clamp(2rem,4vw,3rem);
+  color:var(--brown);line-height:1.05;
+}
+.sec-title em,.sec-title span{color:var(--red2);font-style:normal;}
+.sec-title .hand2{font-family:'Caveat',cursive;font-size:1.15em;color:var(--orange);}
+
+/* ── TOP SELLERS ── */
+.sellers-sec{
+  background:var(--cream2);
+  padding:6rem 5vw;
+  position:relative;
+}
+/* wavy top border */
+.sellers-sec::before{
+  content:'';position:absolute;top:-2px;left:0;right:0;height:60px;
+  background:var(--brown);
+  clip-path:ellipse(55% 100% at 50% 0%);
+}
+.sellers-inner{max-width:1100px;margin:0 auto;}
+.sellers-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:3rem;flex-wrap:wrap;gap:1rem;}
+.view-all{
+  display:flex;align-items:center;gap:.4rem;
+  color:var(--red2);font-weight:800;font-size:.88rem;text-decoration:none;
+  border-bottom:2px dashed var(--red2);padding-bottom:2px;
+  transition:gap .2s,color .2s;
+}
+.view-all:hover{gap:.7rem;color:var(--red);}
+.sellers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;}
+
+.seller-card{
+  background:#fff;border-radius:24px;overflow:hidden;
+  border:2px solid var(--border);
+  transition:all .35s var(--ease2);
+  position:relative;cursor:none;
+  box-shadow:0 4px 20px rgba(59,26,8,.06);
+}
+.seller-card:hover{transform:translateY(-10px) rotate(-.5deg);box-shadow:0 24px 60px rgba(200,0,26,.15);border-color:var(--red2);}
+.seller-hot{
+  position:absolute;top:.9rem;left:.9rem;z-index:2;
+  background:var(--red2);color:#fff;
+  font-size:.65rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:.28rem .8rem;border-radius:50px;
+}
+.seller-img{position:relative;overflow:hidden;height:210px;}
+.seller-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s var(--ease2);}
+.seller-card:hover .seller-img img{transform:scale(1.1);}
+.seller-body{padding:1.2rem 1.3rem 1.4rem;}
+.seller-stars{display:flex;align-items:center;gap:.3rem;margin-bottom:.4rem;}
+.stars-ico{color:#f59e0b;font-size:.82rem;}
+.rev-ct{font-size:.72rem;color:var(--muted);font-weight:600;}
+.seller-name{font-family:'Alfa Slab One',serif;font-size:1.1rem;color:var(--brown);margin-bottom:.3rem;}
+.seller-desc{font-size:.82rem;color:var(--muted);line-height:1.55;margin-bottom:1rem;}
+.seller-foot{display:flex;align-items:center;justify-content:space-between;}
+.seller-price{font-size:1.4rem;font-weight:900;color:var(--red2);}
+.seller-price sup{font-size:.7em;font-weight:700;}
+.seller-add{
+  background:var(--red2);color:#fff;border:none;
+  border-radius:50px;padding:.52rem 1.1rem;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;
+  cursor:none;transition:all .25s var(--ease2);
+  box-shadow:0 4px 14px rgba(232,25,44,.3);
+  position:relative;overflow:hidden;
+}
+.seller-add:hover{background:var(--red);transform:scale(1.05);}
+
+/* ── MENU SECTION ── */
+.menu-sec{
+  background:var(--cream);
+  padding:6rem 5vw;
+  position:relative;
+}
+.menu-sec::before{
+  content:'';position:absolute;top:-2px;left:0;right:0;height:50px;
+  background:var(--cream2);
+  clip-path:ellipse(55% 100% at 50% 0%);
+}
+.menu-inner{max-width:1100px;margin:0 auto;}
+.menu-head{text-align:center;margin-bottom:3rem;}
+.menu-head .sec-title{color:var(--brown);}
+.menu-head p{color:var(--muted);margin-top:.6rem;font-size:.92rem;}
+
+.cats{
+  display:flex;gap:.6rem;overflow-x:auto;padding-bottom:.5rem;
+  margin-bottom:2.5rem;scrollbar-width:none;
+  justify-content:center;flex-wrap:wrap;
+}
+.cats::-webkit-scrollbar{display:none;}
+.cbt{
+  background:#fff;border:2px solid var(--border);
+  border-radius:50px;padding:.48rem 1.1rem;
+  font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;
+  cursor:none;white-space:nowrap;color:var(--muted);
+  transition:all .2s var(--ease2);flex-shrink:0;
+}
+.cbt.on,.cbt:hover{background:var(--red2);border-color:var(--red2);color:#fff;transform:translateY(-2px);box-shadow:0 4px 14px rgba(232,25,44,.3);}
+
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;}
+@media(max-width:1024px){.mgrid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:680px){.mgrid{grid-template-columns:repeat(2,1fr);}}
+
+.mcard{
+  background:#fff;border:2px solid var(--border);
+  border-radius:18px;overflow:hidden;
+  transition:all .3s var(--ease2);cursor:none;
+  box-shadow:0 2px 12px rgba(59,26,8,.05);
+}
+.mcard:hover{transform:translateY(-6px);border-color:var(--orange);box-shadow:0 14px 40px rgba(200,0,26,.12);}
+.mcard-img{overflow:hidden;height:120px;}
+.mcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease2);}
+.mcard:hover .mcard-img img{transform:scale(1.1);}
+.mcard-body{padding:.85rem .95rem 1rem;}
+.mcard-name{font-weight:800;font-size:.88rem;color:var(--brown);line-height:1.3;margin-bottom:.5rem;}
+.mcard-desc{font-size:.72rem;color:var(--muted);line-height:1.4;margin-bottom:.6rem;}
+.mcard-foot{display:flex;align-items:center;justify-content:space-between;}
+.mcard-price{font-weight:900;color:var(--red2);font-size:.98rem;}
+.madd{
+  background:var(--red2);color:#fff;border:none;
+  border-radius:50%;width:30px;height:30px;
+  font-size:1.2rem;cursor:none;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;transition:all .25s var(--ease2);
+  box-shadow:0 3px 10px rgba(232,25,44,.35);
+}
+.madd:hover{background:var(--red);transform:scale(1.2) rotate(90deg);}
+
+/* ── REVIEWS ── */
+.reviews-sec{
+  background:var(--brown);
+  padding:6rem 5vw;
+  position:relative;
+}
+.reviews-sec::before{
+  content:'';position:absolute;top:-2px;left:0;right:0;height:60px;
+  background:var(--cream);
+  clip-path:ellipse(55% 100% at 50% 0%);
+}
+.reviews-inner{max-width:1100px;margin:0 auto;}
+.rev-head{text-align:center;margin-bottom:2.5rem;}
+.rev-head .sec-title{color:#fff;}
+.rev-head .sec-title span{color:var(--yellow);}
+.rev-head .sec-label{color:var(--yellow);}
+.rev-overall{
+  display:flex;align-items:center;justify-content:center;
+  gap:1.5rem;margin-bottom:3rem;flex-wrap:wrap;
+}
+.rev-big{font-family:'Alfa Slab One',serif;font-size:4.5rem;color:var(--yellow);line-height:1;}
+.rev-stars-row{font-size:1.6rem;letter-spacing:2px;}
+.rev-total{color:rgba(255,255,255,.45);font-size:.85rem;margin-top:.3rem;}
+
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;}
+@media(max-width:900px){.rgrid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:560px){.rgrid{grid-template-columns:1fr;}}
+
+.rcard{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:1.5rem;
+  transition:all .3s var(--ease2);
+  backdrop-filter:blur(10px);
+}
+.rcard:hover{background:rgba(255,255,255,.09);border-color:rgba(255,194,0,.3);transform:translateY(-4px);}
+.rcard-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.9rem;}
+.rcard-user{display:flex;align-items:center;gap:.7rem;}
+.ravatar{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.05rem;font-weight:800;color:#fff;flex-shrink:0;
+  border:2px solid rgba(255,255,255,.2);
+}
+.rname{font-weight:800;font-size:.9rem;color:#fff;}
+.rdate{font-size:.7rem;color:rgba(255,255,255,.4);margin-top:.1rem;}
+.rstars{color:#f59e0b;font-size:.82rem;letter-spacing:.5px;}
+.rquote{font-size:.87rem;color:rgba(255,255,255,.65);line-height:1.7;font-style:italic;}
+.rquote::before{content:'"';font-family:'Alfa Slab One',serif;font-size:2.5rem;color:var(--yellow);line-height:.4;display:block;margin-bottom:.5rem;opacity:.7;}
+.rplatform{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;color:rgba(255,255,255,.3);margin-top:.9rem;font-weight:700;}
+.gdot{width:8px;height:8px;border-radius:50%;background:#4285f4;}
+
+/* ── ABOUT ── */
+.about-sec{
+  background:var(--cream2);
+  padding:6rem 5vw;
+  position:relative;
+}
+.about-sec::before{
+  content:'';position:absolute;top:-2px;left:0;right:0;height:60px;
+  background:var(--brown);
+  clip-path:ellipse(55% 100% at 50% 0%);
+}
+.about-wrap{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;}
+.about-text .sec-title{margin-bottom:1.5rem;}
+.about-text p{color:var(--muted);line-height:1.9;margin-bottom:1rem;font-size:.97rem;}
+.about-badge{
+  display:inline-flex;align-items:center;gap:.6rem;
+  background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);
+  color:var(--green);font-size:.8rem;font-weight:700;
+  padding:.5rem 1.1rem;border-radius:50px;margin-top:.5rem;
+}
+.about-vis{position:relative;}
+.about-plate{
+  width:100%;aspect-ratio:1;
+  border-radius:50%;
+  overflow:hidden;
+  border:6px solid var(--border);
+  box-shadow:0 20px 60px rgba(59,26,8,.2);
+  position:relative;
+}
+.about-plate img{width:100%;height:100%;object-fit:cover;}
+.about-plate-badge{
+  position:absolute;bottom:1.2rem;right:-1rem;
+  background:var(--red2);color:#fff;
+  border-radius:16px;padding:.7rem 1.2rem;
+  text-align:center;
+  box-shadow:0 8px 24px rgba(232,25,44,.4);
+  border:3px solid #fff;
+}
+.about-plate-badge strong{display:block;font-family:'Alfa Slab One',serif;font-size:1.3rem;}
+.about-plate-badge span{font-size:.72rem;font-weight:700;opacity:.85;}
+
+/* ── FOOTER ── */
+footer{background:var(--brown);position:relative;z-index:2;}
+.footer-map-sec{
+  max-width:1100px;margin:0 auto;
+  padding:5rem 5vw 0;
+}
+.fmap-head{text-align:center;margin-bottom:2rem;}
+.fmap-title{font-family:'Alfa Slab One',serif;font-size:clamp(1.8rem,3vw,2.4rem);color:#fff;margin-bottom:.5rem;}
+.fmap-title span{color:var(--yellow);}
+.fmap-sub{color:rgba(255,255,255,.45);font-size:.9rem;}
+.map-wrap{
+  border-radius:24px;overflow:hidden;
+  border:2px solid rgba(255,255,255,.1);
+  box-shadow:0 12px 50px rgba(0,0,0,.4);
+  height:380px;position:relative;
+}
+.map-wrap iframe{width:100%;height:100%;border:0;display:block;}
+.dir-btn{
+  position:absolute;bottom:1.2rem;right:1.2rem;
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:var(--red2);color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;
+  padding:.65rem 1.3rem;border-radius:50px;
+  text-decoration:none;
+  box-shadow:0 4px 20px rgba(232,25,44,.5);
+  transition:all .25s var(--ease2);
+}
+.dir-btn:hover{background:var(--red);transform:translateY(-2px);}
+
+.footer-info{
+  max-width:1100px;margin:0 auto;
+  display:grid;grid-template-columns:1.2fr 1fr 1fr;
+  gap:3rem;padding:3.5rem 5vw 2.5rem;
+}
+.flogo{font-family:'Alfa Slab One',serif;font-size:1.7rem;color:#fff;margin-bottom:.5rem;}
+.flogo span{color:var(--yellow);}
+.ftagline{color:rgba(255,255,255,.38);font-size:.84rem;line-height:1.6;margin-bottom:1rem;}
+.ffssai{color:rgba(255,255,255,.3);font-size:.74rem;}
+.floc-title{color:var(--yellow);font-weight:800;font-size:.72rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:.9rem;}
+.flink{display:block;color:rgba(255,255,255,.45);text-decoration:none;font-size:.88rem;font-weight:600;padding:.26rem 0;transition:color .2s;}
+.flink:hover{color:var(--yellow);}
+.faddr{color:rgba(255,255,255,.45);font-size:.86rem;line-height:1.8;margin-bottom:1rem;}
+.fwa{
+  display:inline-flex;align-items:center;gap:.55rem;
+  background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);
+  color:#25d366;font-size:.86rem;font-weight:800;
+  padding:.55rem 1.1rem;border-radius:50px;text-decoration:none;
+  transition:all .22s var(--ease2);
+}
+.fwa:hover{background:#25d366;color:#fff;transform:translateY(-2px);}
+.footer-bottom{
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:1.2rem 5vw;text-align:center;
+}
+.footer-bottom p{color:rgba(255,255,255,.22);font-size:.8rem;}
+.footer-bottom strong{color:var(--yellow);}
+.fheart{color:var(--red2);}
+
+/* ── CART ── */
+.cart-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;display:none;backdrop-filter:blur(8px);animation:fIn .25s;}
+.cart-ov.on{display:block;}
+.cart-pn{position:fixed;right:0;top:0;bottom:0;width:min(420px,100vw);background:#fff;z-index:1001;display:flex;flex-direction:column;transform:translateX(108%);transition:transform .45s var(--ease);box-shadow:-20px 0 80px rgba(0,0,0,.25);}
+.cart-pn.on{transform:translateX(0);}
+.cart-hd{background:var(--brown);color:#fff;padding:1.4rem 1.6rem;display:flex;justify-content:space-between;align-items:center;}
+.cart-hd h3{font-family:'Alfa Slab One',serif;font-size:1.3rem;color:var(--yellow);}
+.close-c{background:rgba(255,255,255,.1);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1.2rem;cursor:none;display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease2);}
+.close-c:hover{background:var(--red2);transform:rotate(90deg);}
+.cart-list{flex:1;overflow-y:auto;padding:1.2rem;}
+.c-empty{text-align:center;padding:4rem 1.5rem;color:var(--muted);font-size:1rem;line-height:1.8;}
+.c-empty-ico{font-size:3.5rem;display:block;margin-bottom:1rem;}
+.citem{display:flex;align-items:center;gap:.9rem;padding:.9rem 0;border-bottom:1.5px solid var(--border);animation:fadeUp .3s var(--ease);}
+.citem img{width:58px;height:58px;border-radius:12px;object-fit:cover;border:2px solid var(--border);}
+.citem-info{flex:1;}
+.citem-name{font-weight:800;font-size:.9rem;color:var(--brown);}
+.citem-price{font-weight:800;color:var(--red2);font-size:.88rem;margin-top:.2rem;}
+.qty-ctl{display:flex;align-items:center;gap:.5rem;}
+.qb{background:var(--red2);color:#fff;border:none;border-radius:50%;width:27px;height:27px;font-size:1.1rem;cursor:none;display:flex;align-items:center;justify-content:center;font-weight:900;transition:all .2s var(--ease2);}
+.qb:hover{background:var(--red);transform:scale(1.15);}
+.qn{font-weight:900;min-width:22px;text-align:center;}
+.cart-ft{padding:1.4rem 1.6rem;border-top:2px solid var(--border);background:var(--cream);}
+.ctr{display:flex;justify-content:space-between;font-weight:700;margin-bottom:.5rem;font-size:.9rem;color:var(--muted);}
+.cgrand{font-size:1.15rem;font-weight:900;color:var(--brown);padding-top:.5rem;border-top:2px solid var(--border);margin-top:.5rem;}
+.cgrand span{color:var(--red2);}
+.wa-btn{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;
+  background:#25d366;color:#fff;border:none;border-radius:14px;
+  padding:1rem;width:100%;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;
+  cursor:none;margin-top:1rem;
+  transition:all .28s var(--ease2);
+  box-shadow:0 4px 20px rgba(37,211,102,.3);
+  position:relative;overflow:hidden;
+}
+.wa-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);transform:translateX(-110%);transition:transform .45s;}
+.wa-btn:hover::before{transform:translateX(0);}
+.wa-btn:hover{background:#1da851;transform:translateY(-2px);}
+
+/* ── ORDER MODAL ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1200;display:none;backdrop-filter:blur(10px);animation:fIn .25s;}
+.modal-ov.on{display:block;}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.9);z-index:1201;width:min(460px,calc(100vw - 2rem));background:#fff;border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:all .35s var(--ease);overflow:hidden;}
+.modal.on{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all;}
+.modal-header{background:linear-gradient(135deg,var(--brown),var(--brown2));padding:2rem 1.8rem 1.5rem;text-align:center;position:relative;}
+.modal-icon{font-size:2.2rem;margin-bottom:.5rem;}
+.modal-title{font-family:'Alfa Slab One',serif;font-size:1.5rem;color:var(--yellow);}
+.modal-sub{color:rgba(255,255,255,.6);font-size:.84rem;margin-top:.3rem;}
+.modal-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:1rem;cursor:none;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-close:hover{background:var(--red2);transform:rotate(90deg);}
+.modal-body{padding:1.6rem 1.8rem 2rem;}
+.field-group{margin-bottom:1.1rem;}
+.field-label{display:block;font-weight:800;font-size:.8rem;color:var(--brown);letter-spacing:.3px;margin-bottom:.45rem;}
+.field-wrap{position:relative;display:flex;align-items:center;}
+.field-icon{position:absolute;left:.9rem;font-size:1rem;pointer-events:none;}
+.field-input{width:100%;border:2px solid var(--border);border-radius:12px;padding:.72rem .9rem .72rem 2.6rem;font-family:'Nunito',sans-serif;font-size:.92rem;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s,box-shadow .2s;}
+.field-input:focus{border-color:var(--red2);background:#fff;box-shadow:0 0 0 3px rgba(232,25,44,.1);}
+.field-input::placeholder{color:#c8b098;}
+.modal-order-type{margin-bottom:1.2rem;}
+.otype-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;}
+.otype-btn{background:var(--cream);border:2px solid var(--border);border-radius:12px;padding:.7rem .4rem;font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;color:var(--muted);cursor:none;transition:all .2s var(--ease2);text-align:center;}
+.otype-btn.active{background:rgba(200,0,26,.08);border-color:var(--red2);color:var(--red2);}
+.otype-btn:hover:not(.active){background:var(--border);}
+.modal-err{color:var(--red2);font-size:.8rem;font-weight:700;min-height:1.2rem;margin-bottom:.6rem;text-align:center;}
+.modal-confirm-btn{display:flex;align-items:center;justify-content:center;gap:.6rem;background:#25d366;color:#fff;border:none;border-radius:14px;padding:1rem;width:100%;font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;cursor:none;transition:all .28s var(--ease2);box-shadow:0 4px 20px rgba(37,211,102,.35);position:relative;overflow:hidden;}
+.modal-confirm-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);transform:translateX(-110%);transition:transform .45s;}
+.modal-confirm-btn:hover::before{transform:translateX(0);}
+.modal-confirm-btn:hover{background:#1da851;transform:translateY(-2px);}
+
+/* ── CHATBOT ── */
+.cfab{position:fixed;bottom:2rem;right:2rem;z-index:900;background:linear-gradient(135deg,var(--red2),var(--red));color:#fff;border:none;width:60px;height:60px;border-radius:50%;font-size:1.45rem;cursor:none;box-shadow:0 8px 28px rgba(232,25,44,.5);transition:all .3s var(--ease2);display:flex;align-items:center;justify-content:center;}
+.cfab:hover{transform:scale(1.1);}
+.cfab.open{background:var(--brown);}
+.fpulse{position:absolute;inset:0;border-radius:50%;border:2px solid var(--red2);animation:fpulse 2s infinite;pointer-events:none;}
+.cwin{position:fixed;bottom:5.5rem;right:2rem;z-index:900;width:min(370px,calc(100vw - 2rem));height:490px;background:#fff;border-radius:24px;box-shadow:0 20px 80px rgba(0,0,0,.22);display:flex;flex-direction:column;overflow:hidden;transform:scale(.85) translateY(24px);opacity:0;pointer-events:none;transition:all .3s var(--ease);transform-origin:bottom right;}
+.cwin.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+.chdr{background:linear-gradient(135deg,var(--brown),var(--brown2));padding:1rem 1.2rem;display:flex;align-items:center;gap:.9rem;}
+.cav{width:40px;height:40px;border-radius:50%;background:var(--red2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.chdr-info h4{color:var(--yellow);font-size:.92rem;font-weight:800;}
+.chdr-info p{color:rgba(255,255,255,.45);font-size:.72rem;margin-top:.1rem;}
+.ondot{display:inline-block;width:6px;height:6px;background:#25d366;border-radius:50%;margin-right:4px;animation:ondot 2s infinite;}
+.cmsgs{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;background:var(--cream2);}
+.msg{max-width:85%;padding:.68rem 1rem;border-radius:16px;font-size:.86rem;line-height:1.55;animation:msgPop .28s var(--ease);}
+.msg.bot{background:#fff;border:2px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px;}
+.msg.user{background:var(--red2);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.msg.typing{background:#fff;border:2px solid var(--border);align-self:flex-start;}
+.tdots span{display:inline-block;width:6px;height:6px;background:var(--muted);border-radius:50%;animation:blink 1.2s infinite;margin:0 1px;}
+.tdots span:nth-child(2){animation-delay:.2s;}
+.tdots span:nth-child(3){animation-delay:.4s;}
+.cinput-row{display:flex;gap:.6rem;padding:.85rem;border-top:2px solid var(--border);background:#fff;}
+.cinput{flex:1;border:2px solid var(--border);border-radius:50px;padding:.58rem 1.1rem;font-family:'Nunito',sans-serif;font-size:.86rem;outline:none;color:var(--text);background:var(--cream);transition:border-color .2s;}
+.cinput:focus{border-color:var(--red2);background:#fff;}
+.csend{background:var(--red2);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:.95rem;cursor:none;display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease2);flex-shrink:0;}
+.csend:hover{background:var(--red);transform:scale(1.1);}
+
+/* ── PIZZA CUSTOMISER BUTTON on card ── */
+.mcustomise{
+  border-radius:50px !important;
+  width:auto !important;
+  height:auto !important;
+  padding:.38rem .85rem !important;
+  font-size:.72rem !important;
+  font-weight:800 !important;
+  letter-spacing:.2px;
+  transform:none !important;
+}
+.mcustomise:hover{transform:scale(1.04) !important;}
+.pizza-size-hint{
+  font-size:.68rem;color:var(--muted);font-weight:600;
+  margin-top:.3rem;letter-spacing:.5px;
+}
+
+/* ── PIZZA CUSTOMISER MODAL ── */
+.pizza-ov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1400;display:none;backdrop-filter:blur(10px);animation:fIn .25s;}
+.pizza-ov.on{display:block;}
+.pizza-modal{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(.92);
+  z-index:1401;
+  width:min(540px,calc(100vw - 1.5rem));
+  max-height:90vh;
+  background:#fff;border-radius:28px;
+  box-shadow:0 30px 80px rgba(0,0,0,.3);
+  opacity:0;pointer-events:none;
+  transition:all .35s var(--ease);
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.pizza-modal.on{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all;}
+.pizza-modal-close{
+  position:absolute;top:1rem;right:1rem;z-index:2;
+  background:rgba(0,0,0,.35);border:none;color:#fff;
+  width:32px;height:32px;border-radius:50%;
+  font-size:1rem;cursor:none;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.pizza-modal-close:hover{background:var(--red2);transform:rotate(90deg);}
+
+/* hero image strip */
+.pc-hero{
+  position:relative;height:180px;flex-shrink:0;overflow:hidden;
+}
+.pc-hero img{width:100%;height:100%;object-fit:cover;display:block;}
+.pc-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%);}
+.pc-hero-info{
+  position:absolute;bottom:1rem;left:1.4rem;z-index:1;
+}
+.pc-tag{
+  display:inline-flex;align-items:center;gap:.3rem;
+  background:var(--red2);color:#fff;
+  font-size:.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+  padding:.25rem .7rem;border-radius:50px;margin-bottom:.4rem;
+}
+.pc-hero-info h3{font-family:'Alfa Slab One',serif;font-size:1.5rem;color:#fff;line-height:1.1;}
+.pc-hero-info p{color:rgba(255,255,255,.7);font-size:.78rem;margin-top:.2rem;}
+
+/* body scroll */
+.pc-body{overflow-y:auto;padding:1.4rem 1.4rem .5rem;flex:1;}
+.pc-section{margin-bottom:1.4rem;}
+.pc-section-title{
+  font-weight:800;font-size:.82rem;color:var(--brown);
+  letter-spacing:.5px;margin-bottom:.8rem;
+  display:flex;align-items:center;gap:.4rem;
+}
+.pc-section-ico{font-size:1rem;}
+.pc-optional{color:var(--muted);font-weight:600;font-size:.75rem;}
+
+/* SIZE BUTTONS */
+.pc-sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;}
+.pc-size-btn{
+  background:var(--cream);border:2px solid var(--border);
+  border-radius:16px;padding:.85rem .5rem;
+  display:flex;flex-direction:column;align-items:center;gap:.2rem;
+  cursor:none;transition:all .2s var(--ease2);
+  position:relative;overflow:hidden;
+}
+.pc-size-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,0,26,.07),transparent);opacity:0;transition:opacity .2s;}
+.pc-size-btn:hover{border-color:var(--red2);transform:translateY(-2px);}
+.pc-size-btn:hover::before{opacity:1;}
+.pc-size-btn.active{
+  background:rgba(200,0,26,.06);
+  border-color:var(--red2);
+  box-shadow:0 4px 16px rgba(200,0,26,.15);
+}
+.pc-size-btn.active .pc-size-name{color:var(--red2);}
+.pc-size-name{font-weight:900;font-size:.9rem;color:var(--brown);}
+.pc-size-slices{font-size:.68rem;color:var(--muted);font-weight:600;}
+.pc-size-price{font-weight:900;font-size:1rem;color:var(--red2);margin-top:.2rem;}
+.pc-size-btn.active .pc-size-price::before{content:'✓ ';font-size:.75rem;}
+
+/* EXTRAS */
+.pc-extras{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+.pc-extra-btn{
+  background:var(--cream);border:2px solid var(--border);
+  border-radius:14px;padding:.85rem 1rem;
+  display:flex;align-items:center;gap:.7rem;
+  cursor:none;transition:all .2s var(--ease2);
+  text-align:left;
+}
+.pc-extra-btn:hover{border-color:var(--orange);transform:translateY(-2px);}
+.pc-extra-btn.active{
+  background:rgba(255,122,0,.07);
+  border-color:var(--orange);
+  box-shadow:0 4px 14px rgba(255,122,0,.15);
+}
+.pc-extra-ico{font-size:1.4rem;flex-shrink:0;}
+.pc-extra-label{font-weight:800;font-size:.82rem;color:var(--brown);flex:1;}
+.pc-extra-price{font-weight:800;font-size:.82rem;color:var(--orange);flex-shrink:0;}
+.pc-extra-btn.active .pc-extra-label::before{content:'✓ ';color:var(--orange);}
+
+/* footer */
+.pc-footer{
+  padding:1rem 1.4rem 1.3rem;
+  border-top:2px solid var(--border);
+  background:var(--cream);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;flex-shrink:0;
+}
+.pc-total-wrap{display:flex;flex-direction:column;}
+.pc-total-label{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.pc-total-price{font-family:'Alfa Slab One',serif;font-size:1.8rem;color:var(--red2);line-height:1.1;}
+.pc-add-btn{
+  display:flex;align-items:center;gap:.55rem;
+  background:var(--red2);color:#fff;border:none;
+  border-radius:14px;padding:.85rem 1.8rem;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;
+  cursor:none;transition:all .28s var(--ease2);
+  box-shadow:0 4px 20px rgba(200,0,26,.35);
+  position:relative;overflow:hidden;
+  white-space:nowrap;
+}
+.pc-add-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);transform:translateX(-110%);transition:transform .45s;}
+.pc-add-btn:hover::before{transform:translateX(0);}
+.pc-add-btn:hover{background:var(--red);transform:translateY(-2px);box-shadow:0 8px 28px rgba(200,0,26,.45);}
+
+@media(max-width:480px){
+  .pc-sizes{grid-template-columns:repeat(3,1fr);}
+  .pc-extras{grid-template-columns:1fr;}
+  .pc-footer{flex-direction:column;align-items:stretch;text-align:center;}
+  .pc-total-wrap{align-items:center;}
+}
+/* ── PWA INSTALL BANNER ── */
+.pwa-banner{
+  position:fixed;bottom:0;left:0;right:0;
+  z-index:8000;
+  background:var(--brown);
+  border-top:2px solid rgba(255,194,0,.25);
+  padding:1rem 1.4rem;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;
+  transform:translateY(100%);
+  transition:transform .45s var(--ease);
+  box-shadow:0 -8px 40px rgba(0,0,0,.4);
+}
+.pwa-banner.show{transform:translateY(0);}
+.pwa-banner-left{display:flex;align-items:center;gap:.9rem;flex:1;min-width:0;}
+.pwa-banner-icon{width:44px;height:44px;border-radius:12px;flex-shrink:0;object-fit:cover;}
+.pwa-banner-title{font-weight:800;font-size:.92rem;color:#fff;}
+.pwa-banner-sub{font-size:.75rem;color:rgba(255,255,255,.5);margin-top:.1rem;}
+.pwa-banner-btns{display:flex;gap:.6rem;align-items:center;flex-shrink:0;}
+.pwa-dismiss{
+  background:transparent;border:1.5px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.55);
+  border-radius:50px;padding:.45rem 1rem;
+  font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;
+  cursor:pointer;transition:all .2s;
+}
+.pwa-dismiss:hover{border-color:rgba(255,255,255,.4);color:#fff;}
+.pwa-install{
+  background:var(--red2);color:#fff;border:none;
+  border-radius:50px;padding:.5rem 1.2rem;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;
+  cursor:pointer;
+  box-shadow:0 4px 16px rgba(232,25,44,.4);
+  transition:all .25s;
+}
+.pwa-install:hover{background:var(--red);transform:scale(1.04);}
+.ios-hint{
+  position:fixed;bottom:0;left:0;right:0;z-index:8000;
+  background:var(--brown);
+  border-top:2px solid rgba(255,194,0,.25);
+  padding:1.2rem 1.4rem 1.6rem;
+  text-align:center;
+  transform:translateY(100%);
+  transition:transform .45s var(--ease);
+  box-shadow:0 -8px 40px rgba(0,0,0,.4);
+}
+.ios-hint.show{transform:translateY(0);}
+.ios-hint p{color:rgba(255,255,255,.75);font-size:.88rem;line-height:1.7;}
+.ios-hint strong{color:var(--yellow);}
+.ios-hint-arrow{font-size:1.8rem;display:block;margin-bottom:.4rem;animation:bounce 1.2s ease-in-out infinite;}
+.ios-hint-close{position:absolute;top:.8rem;right:1rem;background:none;border:none;color:rgba(255,255,255,.4);font-size:1.2rem;cursor:pointer;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+.toast{position:fixed;bottom:6rem;left:50%;transform:translateX(-50%) translateY(14px);background:var(--brown);color:#fff;border-radius:50px;padding:.68rem 1.5rem;font-weight:800;font-size:.86rem;opacity:0;pointer-events:none;transition:all .35s var(--ease2);z-index:2000;white-space:nowrap;border:2px solid rgba(255,194,0,.3);box-shadow:0 8px 30px rgba(0,0,0,.3);}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── RIPPLE ── */
+.rpl{position:absolute;border-radius:50%;background:rgba(255,255,255,.3);transform:scale(0);animation:rplA .65s linear;pointer-events:none;}
+@keyframes rplA{to{transform:scale(4);opacity:0;}}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fIn{from{opacity:0;}to{opacity:1;}}
+@keyframes fpulse{0%{transform:scale(1);opacity:.7;}100%{transform:scale(1.75);opacity:0;}}
+@keyframes ondot{0%,100%{opacity:1;}50%{opacity:.3;}}
+@keyframes msgPop{from{opacity:0;transform:scale(.9) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes blink{0%,80%,100%{opacity:.25;transform:scale(.8);}40%{opacity:1;transform:scale(1.1);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  header{padding:.8rem 1.4rem;}
+  .nav{display:none;}
+  .install-nav-btn span{display:none;} /* hide text, show only icon on mobile */
+  .install-nav-btn{padding:.5rem .7rem;min-width:36px;justify-content:center;}
+  .hero{grid-template-columns:1fr;min-height:auto;}
+  .hero-left{padding:7rem 1.4rem 3rem;}
+  .hero-right{display:none;}
+  .sellers-grid{grid-template-columns:1fr;}
+  .about-wrap{grid-template-columns:1fr;}
+  .sellers-sec,.menu-sec,.reviews-sec,.about-sec{padding:4rem 1.4rem;}
+  .footer-info{grid-template-columns:1fr;gap:1.8rem;padding:2.5rem 1.4rem;}
+  .footer-map-sec{padding:3.5rem 1.4rem 0;}
+  .map-wrap{height:260px;}
+  .footer-bottom{padding:1.2rem 1.4rem;}
+}
+@media(max-width:1100px){
+  .food-scene{width:420px;height:420px;}
+  .orb-center .orb-inner,.orb-center{width:180px;height:180px;}
+  .orb-tl .orb-inner,.orb-tl{width:110px;height:110px;}
+  .orb-tr .orb-inner,.orb-tr{width:95px;height:95px;}
+  .orb-bl .orb-inner,.orb-bl{width:100px;height:100px;}
+  .orb-br .orb-inner,.orb-br{width:95px;height:95px;}
+}
+@media(max-width:600px){
+  .sellers-grid{grid-template-columns:1fr;}
+  .hero-stats{grid-template-columns:repeat(3,1fr);}
+  .hstat{padding-left:.8rem;padding-right:.8rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- PWA INSTALL BANNER -->
+<div class="pwa-banner" id="pwa-banner">
+  <div class="pwa-banner-left">
+    <img src="icons/icon-96.png" alt="Pizza Garage" class="pwa-banner-icon"/>
+    <div>
+      <div class="pwa-banner-title">📲 Install Pizza Garage App</div>
+      <div class="pwa-banner-sub">Order faster from your home screen!</div>
+    </div>
+  </div>
+  <div class="pwa-banner-btns">
+    <button class="pwa-dismiss" onclick="dismissPWA()">Not now</button>
+    <button class="pwa-install" id="pwa-install-btn" onclick="installPWA()">Install</button>
+  </div>
+</div>
+
+<!-- iOS INSTALL HINT -->
+<div class="ios-hint" id="ios-hint">
+  <button class="ios-hint-close" onclick="dismissIosHint()">✕</button>
+  <span class="ios-hint-arrow">⬇️</span>
+  <p>To install <strong>Pizza Garage</strong> on your iPhone,<br/>tap <strong>Share</strong> (□↑) then <strong>"Add to Home Screen"</strong> ＋</p>
+</div>
+
+<!-- LOADER -->
+<div class="loader" id="loader">
+  <div class="loader-emoji">🍕</div>
+  <div class="loader-name">Pizza <span>Garage</span></div>
+  <div class="loader-track"><div class="loader-fill"></div></div>
+</div>
+
+<!-- CURSOR -->
+<div id="cur"></div><div id="cur-ring"></div>
+
+<!-- HEADER -->
+<header id="hdr">
+  <a href="#" class="logo"><span class="logo-emoji">🍕</span>Pizza <span>Garage</span></a>
+  <nav class="nav">
+    <a href="#sellers">Top Sellers</a>
+    <a href="#menu">Menu</a>
+    <a href="#reviews">Reviews</a>
+    <a href="#about">Story</a>
+  </nav>
+  <div class="header-right">
+    <button class="install-nav-btn" id="install-nav-btn" onclick="installPWA()" title="Install App">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      <span>Install App</span>
+    </button>
+    <button class="cart-pill" onclick="toggleCart()">🛒 Cart <div id="ccount">0</div></button>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero" id="home">
+  <div class="hero-left">
+    <div class="hero-badge">✦ Salempur's Favourite Since 2024</div>
+    <h1>
+      Real Food,<br/>
+      <span class="yell">Real Flavour,</span><br/>
+      <span class="hand">Made Fresh Daily</span>
+    </h1>
+    <p class="hero-sub">Crispy pizzas, juicy burgers, cold shakes & more — handcrafted with love right here in Salempur, Deoria. 🍕☕</p>
+    <div class="hero-btns">
+      <a href="#sellers" class="btn-fire">🔥 Order Now</a>
+      <a href="#menu" class="btn-ghost">📋 Full Menu</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n" data-count="500">0</div><div class="hstat-l">Happy Guests</div></div>
+      <div class="hstat"><div class="hstat-n" data-count="39">0</div><div class="hstat-l">Menu Items</div></div>
+      <div class="hstat"><div class="hstat-n" data-count="100">0</div><div class="hstat-l">% Fresh</div></div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="food-scene" id="food-scene">
+      <!-- Central big pizza -->
+      <div class="food-orb orb-center" data-depth="0">
+        <div class="orb-inner">
+          <img src="images/farmhouse-pizza.png" alt="Pizza"/>
+          <div class="orb-glow orb-glow-red"></div>
+        </div>
+        <div class="orb-label">🍕 Farmhouse Pizza</div>
+      </div>
+      <!-- Burger top-left -->
+      <div class="food-orb orb-tl" data-depth="1">
+        <div class="orb-inner">
+          <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop" alt="Burger"/>
+          <div class="orb-glow orb-glow-amber"></div>
+        </div>
+        <div class="orb-label">🍔 Rockstar Burger</div>
+      </div>
+      <!-- Coffee top-right -->
+      <div class="food-orb orb-tr" data-depth="2">
+        <div class="orb-inner">
+          <img src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&auto=format&fit=crop" alt="Coffee"/>
+          <div class="orb-glow orb-glow-brown"></div>
+        </div>
+        <div class="orb-label">☕ Cold Coffee</div>
+      </div>
+      <!-- Fries bottom-left -->
+      <div class="food-orb orb-bl" data-depth="1">
+        <div class="orb-inner">
+          <img src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&auto=format&fit=crop" alt="Fries"/>
+          <div class="orb-glow orb-glow-yellow"></div>
+        </div>
+        <div class="orb-label">🍟 French Fries</div>
+      </div>
+      <!-- Shake bottom-right -->
+      <div class="food-orb orb-br" data-depth="2">
+        <div class="orb-inner">
+          <img src="https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=400&auto=format&fit=crop" alt="Shake"/>
+          <div class="orb-glow orb-glow-purple"></div>
+        </div>
+        <div class="orb-label">🥤 Oreo Shake</div>
+      </div>
+      <!-- floating sparkles -->
+      <div class="spark s1">✦</div>
+      <div class="spark s2">✦</div>
+      <div class="spark s3">★</div>
+      <div class="spark s4">✦</div>
+      <div class="spark s5">★</div>
+      <div class="spark s6">✦</div>
+    </div>
+    <div class="fbadge b1"><span class="fbadge-ico">⭐</span><div class="fbadge-txt">4.8 Rating<br/><span class="fbadge-sub">150+ Reviews</span></div></div>
+    <div class="fbadge b2"><span class="fbadge-ico">🔥</span><div class="fbadge-txt">Fresh Daily<br/><span class="fbadge-sub">Always Hot</span></div></div>
+    <div class="fbadge b3"><span class="fbadge-ico">⚡</span><div class="fbadge-txt">Fast Delivery<br/><span class="fbadge-sub">via WhatsApp</span></div></div>
+  </div>
+  <div class="scroll-cue"><div class="scroll-line"></div><span>Scroll</span></div>
+</div>
+
+<!-- TOP SELLERS -->
+<section class="sellers-sec" id="sellers">
+  <div class="sellers-inner">
+    <div class="sellers-head rv">
+      <div>
+        <div class="sec-label">🔥 Most Loved</div>
+        <h2 class="sec-title">Top <span>Selling</span> Items</h2>
+      </div>
+      <a href="#menu" class="view-all">View Full Menu →</a>
+    </div>
+    <div class="sellers-grid" id="sellers-grid"></div>
+  </div>
+</section>
+
+<!-- FULL MENU -->
+<section class="menu-sec" id="menu">
+  <div class="menu-inner">
+    <div class="menu-head rv">
+      <div class="sec-label">📋 Our Menu</div>
+      <h2 class="sec-title">Crafted with <span>Love</span></h2>
+      <p>Tap any item to add it to your cart instantly</p>
+    </div>
+    <div class="cats rv" id="cats"></div>
+    <div class="mgrid" id="mgrid"></div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="reviews-sec" id="reviews">
+  <div class="reviews-inner">
+    <div class="rev-head rv">
+      <div class="sec-label">💬 Happy Customers</div>
+      <h2 class="sec-title" style="color:#fff;">What Salempur <span style="color:var(--yellow);">Says</span></h2>
+    </div>
+    <div class="rev-overall rv">
+      <div class="rev-big">4.8</div>
+      <div>
+        <div class="rev-stars-row">⭐⭐⭐⭐⭐</div>
+        <div class="rev-total">Based on 150+ Google Reviews</div>
+      </div>
+    </div>
+    <div class="rgrid rv" id="rgrid"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about-sec" id="about">
+  <div class="about-wrap">
+    <div class="about-text rv">
+      <div class="sec-label">❤️ Our Story</div>
+      <h2 class="sec-title">Born from a <span>Simple Passion</span></h2>
+      <p>Pizza Garage was born from a simple dream — to bring Salempur a place where amazing pizza meets great coffee and everything in between.</p>
+      <p>Every item is made fresh daily, crafted with love, and served with a genuine smile. We believe every meal should feel like a celebration. 🎉</p>
+      <div class="about-badge">✅ FSSAI Registered &nbsp;|&nbsp; 100% Safe &amp; Hygienic</div>
+    </div>
+    <div class="about-vis rv">
+      <div class="about-plate">
+        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&auto=format&fit=crop" alt="Our food"/>
+      </div>
+      <div class="about-plate-badge">
+        <strong>🍕</strong>
+        <span>Made Fresh Daily</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-map-sec">
+    <div class="fmap-head rv">
+      <div class="sec-label" style="color:var(--yellow);justify-content:center;">📍 Visit Us</div>
+      <h2 class="fmap-title">Find <span>Pizza Garage</span></h2>
+      <p class="fmap-sub">In Front of SBI Bank, Salempur, Deoria — UP 274509</p>
+    </div>
+    <div class="map-wrap rv">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14251.68!2d83.9092!3d26.2967!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3993d4b2e51f7ae9%3A0x4f9a4c28b8e51000!2sSalempur%2C+Uttar+Pradesh+274509!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <a class="dir-btn" href="https://maps.app.goo.gl/qD7z7edm1fXtyZeG6?g_st=ac" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        Get Directions
+      </a>
+    </div>
+  </div>
+  <div class="footer-info">
+    <div>
+      <div class="flogo">Pizza <span>Garage</span></div>
+      <p class="ftagline">Real Food, Real Flavour, Made Fresh Daily in Salempur, Deoria.</p>
+      <p class="ffssai">✅ FSSAI Registered · 100% Safe & Hygienic</p>
+    </div>
+    <div>
+      <div class="floc-title">🔗 Quick Links</div>
+      <a href="#sellers" class="flink">Top Sellers</a>
+      <a href="#menu" class="flink">Full Menu</a>
+      <a href="#reviews" class="flink">Reviews</a>
+      <a href="#about" class="flink">Our Story</a>
+    </div>
+    <div>
+      <div class="floc-title">📞 Contact Us</div>
+      <a class="fwa" href="https://wa.me/919161996660" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        +91 92054 28436
+      </a>
+      <p class="faddr" style="margin-top:.9rem;">In Front of SBI Bank,<br/>Salempur, Deoria — UP 274509</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>Made with <span class="fheart">♥</span> in Salempur &nbsp;·&nbsp; <strong>Pizza Garage</strong> © 2026 All Rights Reserved</p>
+  </div>
+</footer>
+
+<!-- CART -->
+<div class="cart-ov" id="cart-ov" onclick="toggleCart()"></div>
+<div class="cart-pn" id="cart-pn">
+  <div class="cart-hd"><h3>🛒 Your Order</h3><button class="close-c" onclick="toggleCart()">✕</button></div>
+  <div class="cart-list" id="cart-list"><div class="c-empty"><span class="c-empty-ico">🍕</span>Your cart is empty!<br/><small style="color:#bbb;">Add something delicious.</small></div></div>
+  <div class="cart-ft" id="cart-ft" style="display:none">
+    <div class="ctr"><span>Subtotal</span><span id="csub">₹0</span></div>
+    <div class="ctr cgrand"><span>Total</span><span id="ctot">₹0</span></div>
+    <button class="wa-btn" onclick="openOrderModal()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Order via WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-ov" id="modal-ov" onclick="closeOrderModal()"></div>
+<div class="modal" id="order-modal">
+  <div class="modal-header">
+    <div class="modal-icon">🍕</div>
+    <h3 class="modal-title">Almost There!</h3>
+    <p class="modal-sub">Tell us who you are so we can prepare your order</p>
+    <button class="modal-close" onclick="closeOrderModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="field-group">
+      <label class="field-label">Your Name *</label>
+      <div class="field-wrap"><span class="field-icon">👤</span><input class="field-input" id="cust-name" type="text" placeholder="e.g. Rahul Kumar" maxlength="40"/></div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Phone Number *</label>
+      <div class="field-wrap"><span class="field-icon">📞</span><input class="field-input" id="cust-phone" type="tel" placeholder="e.g. 9876543210" maxlength="10"/></div>
+    </div>
+    <div class="field-group" id="addr-group">
+      <label class="field-label">Delivery Address *</label>
+      <div class="field-wrap"><span class="field-icon">📍</span><input class="field-input" id="cust-addr" type="text" placeholder="e.g. Near SBI Bank, Salempur" maxlength="80"/></div>
+    </div>
+    <div class="modal-order-type">
+      <p class="field-label" style="margin-bottom:.6rem;">Order Type</p>
+      <div class="otype-btns">
+        <button class="otype-btn active" id="otype-delivery" onclick="selectType('delivery')">🛵 Delivery</button>
+        <button class="otype-btn" id="otype-pickup" onclick="selectType('pickup')">🥡 Pickup</button>
+        <button class="otype-btn" id="otype-dinein" onclick="selectType('dinein')">🍽️ Dine In</button>
+      </div>
+    </div>
+    <div class="modal-err" id="modal-err"></div>
+    <button class="modal-confirm-btn" onclick="confirmOrder()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Send Order on WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- PIZZA CUSTOMISER MODAL -->
+<div class="pizza-ov" id="pizza-ov" onclick="closePizzaCustomiser()"></div>
+<div class="pizza-modal" id="pizza-modal">
+  <button class="pizza-modal-close" onclick="closePizzaCustomiser()">✕</button>
+  <div class="pc-hero">
+    <img id="pc-img" src="" alt="Pizza"/>
+    <div class="pc-hero-info">
+      <div class="pc-tag">🍕 Customise Your Pizza</div>
+      <h3 id="pc-name"></h3>
+      <p id="pc-desc"></p>
+    </div>
+  </div>
+  <div class="pc-body">
+    <!-- SIZE -->
+    <div class="pc-section">
+      <div class="pc-section-title">
+        <span class="pc-section-ico">📏</span> Choose Your Size
+      </div>
+      <div class="pc-sizes" id="pc-sizes"></div>
+    </div>
+    <!-- EXTRAS -->
+    <div class="pc-section">
+      <div class="pc-section-title">
+        <span class="pc-section-ico">✨</span> Add Extras <span class="pc-optional">(optional)</span>
+      </div>
+      <div class="pc-extras" id="pc-extras"></div>
+    </div>
+  </div>
+  <div class="pc-footer">
+    <div class="pc-total-wrap">
+      <span class="pc-total-label">Total</span>
+      <span class="pc-total-price" id="pc-total">₹0</span>
+    </div>
+    <button class="pc-add-btn" id="pc-add-btn" onclick="addPizzaToCart()">
+      🛒 Add to Cart
+    </button>
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<button class="cfab" id="cfab" onclick="toggleChat()"><div class="fpulse"></div>💬</button>
+<div class="cwin" id="cwin">
+  <div class="chdr">
+    <div class="cav">🤖</div>
+    <div class="chdr-info"><h4>Pizza Garage AI</h4><p><span class="ondot"></span>Online · Replies instantly</p></div>
+  </div>
+  <div class="cmsgs" id="cmsgs"></div>
+  <div class="cinput-row">
+    <input class="cinput" id="cinput" placeholder="Ask about our menu..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+    <button class="csend" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+//  FOOD SCENE — MOUSE PARALLAX
+// ════════════════════════════════════════
+(function(){
+  const scene=document.getElementById('food-scene');
+  if(!scene)return;
+  const orbs=scene.querySelectorAll('.food-orb');
+  let targetX=0,targetY=0,currentX=0,currentY=0;
+
+  // track mouse over hero
+  const hero=document.getElementById('home');
+  hero.addEventListener('mousemove',e=>{
+    const r=hero.getBoundingClientRect();
+    // -1 to 1 range
+    targetX=((e.clientX-r.left)/r.width-.5)*2;
+    targetY=((e.clientY-r.top)/r.height-.5)*2;
+  });
+  hero.addEventListener('mouseleave',()=>{targetX=0;targetY=0;});
+
+  // gyroscope support for mobile
+  if(window.DeviceOrientationEvent){
+    window.addEventListener('deviceorientation',e=>{
+      targetX=(e.gamma||0)/45;
+      targetY=(e.beta||0)/45;
+    });
+  }
+
+  // smooth animation loop
+  (function tick(){
+    requestAnimationFrame(tick);
+    currentX+=(targetX-currentX)*.06;
+    currentY+=(targetY-currentY)*.06;
+
+    // tilt the whole scene slightly
+    scene.style.transform=`perspective(900px) rotateY(${currentX*10}deg) rotateX(${-currentY*7}deg)`;
+
+    // each orb moves at different depth/speed (parallax)
+    orbs.forEach(orb=>{
+      const depth=+(orb.dataset.depth||0);
+      const factor=(depth+1)*8;
+      const ox=currentX*factor;
+      const oy=currentY*factor;
+      // preserve existing animation via CSS, add translate on top
+      orb.style.marginLeft=`${ox}px`;
+      orb.style.marginTop=`${oy}px`;
+    });
+  })();
+})();
+
+// ════════════════════════════════════════
+//  CURSOR
+// ════════════════════════════════════════
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+let cx=0,cy=0,rx=0,ry=0;
+addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;});
+(function tc(){rx+=(cx-rx)*.14;ry+=(cy-ry)*.14;cur.style.left=cx+'px';cur.style.top=cy+'px';ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(tc);})();
+document.querySelectorAll('a,button,.seller-card,.mcard,.rcard,.cbt').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));
+});
+
+// ════════════════════════════════════════
+//  LOADER
+// ════════════════════════════════════════
+setTimeout(()=>{document.getElementById('loader').classList.add('out');animateCounters();},1800);
+
+// ════════════════════════════════════════
+//  HEADER SCROLL
+// ════════════════════════════════════════
+addEventListener('scroll',()=>document.getElementById('hdr').classList.toggle('stuck',scrollY>60));
+
+// ════════════════════════════════════════
+//  REVEAL
+// ════════════════════════════════════════
+const obs=new IntersectionObserver(entries=>entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('vis'),i*60);}),{threshold:.1});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+
+// ════════════════════════════════════════
+//  COUNTERS
+// ════════════════════════════════════════
+function animateCounters(){
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const tgt=+el.dataset.count;let c=0;
+    const iv=setInterval(()=>{c=Math.min(c+tgt/55,tgt);el.textContent=Math.floor(c)+(tgt===100?'':'+');if(c>=tgt)clearInterval(iv);},24);
+  });
+}
+
+// ════════════════════════════════════════
+//  RIPPLE
+// ════════════════════════════════════════
+function ripple(e,el){
+  const r=document.createElement('span');r.className='rpl';
+  const rc=el.getBoundingClientRect(),sz=Math.max(rc.width,rc.height)*2;
+  r.style.cssText=`width:${sz}px;height:${sz}px;left:${e.clientX-rc.left-sz/2}px;top:${e.clientY-rc.top-sz/2}px;`;
+  el.appendChild(r);setTimeout(()=>r.remove(),700);
+}
+addEventListener('click',e=>{
+  const t=e.target.closest('.btn-fire,.btn-ghost,.cbt,.madd,.seller-add,.wa-btn,.cart-pill,.modal-confirm-btn,.pc-add-btn,.pc-size-btn,.pc-extra-btn');
+  if(t)ripple(e,t);
+});
+
+// ════════════════════════════════════════
+//  DATA
+// ════════════════════════════════════════
+const PIZZA_SIZES=[
+  {key:'regular', label:'Regular', slices:'4 Slices', prices:[99,119,129,139,149,139]},
+  {key:'medium',  label:'Medium',  slices:'6 Slices', prices:[189,229,229,249,279,249]},
+  {key:'large',   label:'Large',   slices:'8 Slices', prices:[289,329,329,349,379,349]},
+];
+const PIZZA_EXTRAS=[
+  {key:'cheese', label:'Extra Cheese', prices:{regular:35, medium:49, large:79}},
+  {key:'veggies',label:'Extra Veggies', prices:{regular:25, medium:35, large:45}},
+];
+const PIZZA_IDS=[1,2,3,4,5,6]; // IDs of pizza items (index 0-5 matches PIZZA_SIZES prices arrays)
+
+const MENU=[
+  {id:1, name:"Margherita",              price:99,  cat:"🍕 Pizza",       img:"https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=400&auto=format&fit=crop",   desc:"Cheese and tomato",            isPizza:true, pizzaIdx:0},
+  {id:2, name:"Cheese & Corn",           price:119, cat:"🍕 Pizza",       img:"images/cheese-corn-pizza.png",   desc:"Cheese, sweet corn",           isPizza:true, pizzaIdx:1},
+  {id:3, name:"Hot & Spicy",             price:129, cat:"🍕 Pizza",       img:"images/hot-spicy-pizza.png",   desc:"Cheese, capsicum, green chilly",isPizza:true,pizzaIdx:2},
+  {id:4, name:"Paneer Makhani",          price:139, cat:"🍕 Pizza",       img:"images/paneer-makhani-pizza.png",   desc:"Cheese, spiced paneer, onion", isPizza:true, pizzaIdx:3},
+  {id:5, name:"Farmhouse Pizza",         price:149, cat:"🍕 Pizza",       img:"images/farmhouse-pizza.png",   desc:"Cheese, pineapple, onion, capsicum",isPizza:true,pizzaIdx:4},
+  {id:6, name:"Paneer Schezwan",         price:139, cat:"🍕 Pizza",       img:"images/paneer-schezwan-pizza.png",   desc:"Spiced paneer, red peprica, capsicum",isPizza:true,pizzaIdx:5},
+  {id:7, name:"Veg Burger",              price:50,  cat:"🍔 Burgers",     img:"images/veg-burger.png"},
+  {id:8, name:"Paneer Burger",           price:60,  cat:"🍔 Burgers",     img:"images/paneer-burger.png"},
+  {id:9, name:"Rockstar Burger",         price:99,  cat:"🍔 Burgers",     img:"images/rockstar-burger.png"},
+  {id:10,name:"Cheese Burger",           price:80,  cat:"🍔 Burgers",     img:"images/cheese-burger.png"},
+  {id:11,name:"Double Cheese Burger",    price:99,  cat:"🍔 Burgers",     img:"images/double-cheese-burger.png"},
+  {id:12,name:"Cheese Sandwich",         price:60,  cat:"🥪 Sandwiches",  img:"images/cheese-sandwich.png"},
+  {id:13,name:"Grilled Sandwich",        price:70,  cat:"🥪 Sandwiches",  img:"images/grilled-sandwich.png"},
+  {id:14,name:"Paneer Sandwich",         price:80,  cat:"🥪 Sandwiches",  img:"images/paneer-sandwich.png"},
+  {id:15,name:"Tandoori Sandwich",       price:70,  cat:"🥪 Sandwiches",  img:"images/tandoori-sandwich.png"},
+  {id:16,name:"French Fry",              price:70,  cat:"🍟 Fries",       img:"images/french-fry.png"},
+  {id:17,name:"Cheesey French Fry",      price:99,  cat:"🍟 Fries",       img:"images/cheesey-french-fry.png"},
+  {id:18,name:"Peri Peri French Fry",    price:79,  cat:"🍟 Fries",       img:"images/peri-peri-fry.png"},
+  {id:19,name:"Plain Garlic Bread",      price:90,  cat:"🥖 Garlic Bread",img:"images/plain-garlic-bread.png"},
+  {id:20,name:"Stuffed Garlic Bread",    price:99,  cat:"🥖 Garlic Bread",img:"images/stuffed-garlic-bread.png"},
+  {id:21,name:"Paneer Garlic Bread",     price:119, cat:"🥖 Garlic Bread",img:"images/paneer-garlic-bread.png"},
+  {id:22,name:"Veg Hakka Noodles",       price:89,  cat:"🍜 Chinese",     img:"images/veg-hakka-noodles.png"},
+  {id:23,name:"Veg Fried Rice",          price:89,  cat:"🍜 Chinese",     img:"images/veg-fried-rice.png"},
+  {id:24,name:"Veg Manchurian",          price:89,  cat:"🍜 Chinese",     img:"images/veg-manchurian.png"},
+  {id:25,name:"Chilly Potato",           price:99,  cat:"🍜 Chinese",     img:"images/chilly-potato.png"},
+  {id:26,name:"Hot Coffee",              price:45,  cat:"☕ Coffee",      img:"images/hot-coffee.png"},
+  {id:27,name:"Butter Coffee",           price:55,  cat:"☕ Coffee",      img:"images/butter-coffee.png"},
+  {id:28,name:"Cold Coffee",             price:69,  cat:"☕ Coffee",      img:"images/cold-coffee.png"},
+  {id:29,name:"Cold Coffee w/ Ice Cream",price:89,  cat:"☕ Coffee",      img:"images/cold-coffee-icecream.png"},
+  {id:30,name:"Oreo Shake",              price:99,  cat:"🥤 Shakes",      img:"images/oreo-shake.png"},
+  {id:31,name:"Kit Kat Shake",           price:99,  cat:"🥤 Shakes",      img:"images/kitkat-shake.png"},
+  {id:32,name:"Mango Shake",             price:99,  cat:"🥤 Shakes",      img:"images/mango-shake.png"},
+  {id:33,name:"Strawberry Shake",        price:80,  cat:"🥤 Shakes",      img:"images/strawberry-shake.png"},
+  {id:34,name:"Chocolate Fantasy",       price:80,  cat:"🥤 Shakes",      img:"images/chocolate-fantasy.png"},
+  {id:35,name:"Pav Bhaji",               price:79,  cat:"🍛 More",        img:"images/pav-bhaji.png"},
+  {id:36,name:"White Sauce Pasta",       price:99,  cat:"🍛 More",        img:"images/white-sauce-pasta.png"},
+  {id:37,name:"Red Sauce Pasta",         price:80,  cat:"🍛 More",        img:"images/red-sauce-pasta.png"},
+  {id:38,name:"Masala Maggi",            price:60,  cat:"🍛 More",        img:"images/masala-maggi.png"},
+  {id:39,name:"Choco Lava Cake",         price:60,  cat:"🍛 More",        img:"images/choco-lava-cake.png"},
+];
+
+const SELLERS=[
+  {id:5, name:"Farmhouse Pizza",   desc:"Loaded with pineapple, onion, capsicum & black olive on a golden crust. Salempur's all-time favourite!",price:149,img:"images/farmhouse-pizza.png",stars:"★★★★★",reviews:"124"},
+  {id:9, name:"Rockstar Burger",   desc:"Our signature beast — crispy patty, melted cheese, fresh lettuce & special Pizza Garage sauce.",price:99,img:"images/rockstar-burger.png",stars:"★★★★★",reviews:"98"},
+  {id:28,name:"Cold Coffee",       desc:"Smooth, frothy & perfectly chilled — the go-to refresher every afternoon in Salempur.",price:69,img:"images/cold-coffee.png",stars:"★★★★★",reviews:"87"},
+];
+
+const REVIEWS=[
+  {name:"Rahul S.",  date:"2 weeks ago", stars:"★★★★★",text:"Best cafe in Salempur! The Farmhouse Pizza is absolutely unreal — fresh toppings, perfect crust. I order it every week!",init:"R",color:"#c8001a"},
+  {name:"Priya M.",  date:"1 month ago", stars:"★★★★★",text:"Pizza Garage is my daily go-to. The Cold Coffee is perfectly chilled and the Rockstar Burger is just incredible!",init:"P",color:"#ff7a00"},
+  {name:"Aakash T.", date:"3 weeks ago", stars:"★★★★★",text:"Ordered via WhatsApp — super fast! The Chilly Potato and Veg Manchurian combo is absolutely fire 🔥",init:"A",color:"#16a34a"},
+  {name:"Neha G.",   date:"1 month ago", stars:"★★★★☆",text:"Amazing prices for such great quality. The Paneer Garlic Bread is so soft and cheesy. Will always come back!",init:"N",color:"#2563eb"},
+  {name:"Vikram P.", date:"2 months ago",stars:"★★★★★",text:"Honestly the best food in Deoria. The Choco Lava Cake is pure heaven. Clean, hygienic, restaurant-level taste.",init:"V",color:"#7c3aed"},
+  {name:"Simran K.", date:"3 months ago",stars:"★★★★★",text:"Oreo Shake + Stuffed Garlic Bread is the perfect combo! Love the warm service and consistent quality.",init:"S",color:"#db2777"},
+];
+
+const CATS=["All",...new Set(MENU.map(i=>i.cat))];
+let activeCat="All";
+
+// ── CART PERSISTENCE ──
+// Load cart from localStorage on startup
+function loadCartFromStorage(){
+  try{
+    const saved = localStorage.getItem('pg_cart');
+    if(saved){
+      const parsed = JSON.parse(saved);
+      // Re-validate each item still exists in MENU
+      const valid = {};
+      Object.entries(parsed).forEach(([key, item])=>{
+        const found = MENU.find(m=>m.id===item.id);
+        if(found) valid[key] = {...item};
+      });
+      return valid;
+    }
+  } catch(e){ console.warn('Cart load error:', e); }
+  return {};
+}
+
+function saveCartToStorage(){
+  try{
+    localStorage.setItem('pg_cart', JSON.stringify(cart));
+  } catch(e){ console.warn('Cart save error:', e); }
+}
+
+let cart = loadCartFromStorage();
+
+// ── SELLERS ──
+function renderSellers(){
+  document.getElementById('sellers-grid').innerHTML=SELLERS.map((s,i)=>`
+    <div class="seller-card rv" style="transition-delay:${i*.1}s">
+      <div class="seller-hot">🔥 Top Seller</div>
+      <div class="seller-img"><img src="${s.img}" alt="${s.name}" loading="lazy"/></div>
+      <div class="seller-body">
+        <div class="seller-stars"><span class="stars-ico">${s.stars}</span><span class="rev-ct">(${s.reviews} reviews)</span></div>
+        <div class="seller-name">${s.name}</div>
+        <div class="seller-desc">${s.desc}</div>
+        <div class="seller-foot">
+          <span class="seller-price"><sup>₹</sup>${s.price}</span>
+          <button class="seller-add" onclick="addCart(${s.id},event)">+ Add to Cart</button>
+        </div>
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('.rv:not(.vis)').forEach(el=>obs.observe(el));
+}
+
+// ── REVIEWS ──
+function renderReviews(){
+  document.getElementById('rgrid').innerHTML=REVIEWS.map((r,i)=>`
+    <div class="rcard rv" style="transition-delay:${i*.08}s">
+      <div class="rcard-top">
+        <div class="rcard-user">
+          <div class="ravatar" style="background:${r.color}">${r.init}</div>
+          <div><div class="rname">${r.name}</div><div class="rdate">${r.date}</div></div>
+        </div>
+        <div class="rstars">${r.stars}</div>
+      </div>
+      <div class="rquote">${r.text}</div>
+      <div class="rplatform"><div class="gdot"></div>Google Review</div>
+    </div>`).join('');
+  document.querySelectorAll('.rv:not(.vis)').forEach(el=>obs.observe(el));
+}
+
+// ── CATEGORIES ──
+function renderCats(){
+  document.getElementById('cats').innerHTML=CATS.map(c=>`<button class="cbt ${c===activeCat?'on':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+function setCat(c){
+  activeCat=c;renderCats();
+  const g=document.getElementById('mgrid');
+  g.style.cssText='opacity:0;transform:translateY(12px);transition:none;';
+  setTimeout(()=>{renderMenu();g.style.cssText='opacity:1;transform:translateY(0);transition:opacity .3s,transform .3s;';},180);
+}
+
+// ── MENU ──
+function renderMenu(){
+  const items=activeCat==="All"?MENU:MENU.filter(i=>i.cat===activeCat);
+  document.getElementById('mgrid').innerHTML=items.map((item,idx)=>`
+    <div class="mcard" style="animation:fadeUp .4s ${idx*.04}s var(--ease) both">
+      <div class="mcard-img"><img src="${item.img}" alt="${item.name}" loading="lazy"/></div>
+      <div class="mcard-body">
+        <div class="mcard-name">${item.name}</div>
+        ${item.desc?`<div class="mcard-desc">${item.desc}</div>`:''}
+        <div class="mcard-foot">
+          <span class="mcard-price">${item.isPizza?'From ':''}₹${item.price}</span>
+          ${item.isPizza
+            ? `<button class="madd mcustomise" onclick="openPizzaCustomiser(${item.id},event)">🍕 Customise</button>`
+            : `<button class="madd" onclick="addCart(${item.id},event)">+</button>`
+          }
+        </div>
+        ${item.isPizza?`<div class="pizza-size-hint">Regular · Medium · Large</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ── CART ──
+function addCart(id, e, opts){
+  const item=MENU.find(i=>i.id===id);
+  // for pizza, opts = {size, extras[], price, label}
+  const cartKey = opts ? `${id}_${opts.size}_${opts.extras.join('_')}` : `${id}`;
+  const displayName = opts ? `${item.name} (${opts.sizeLabel}${opts.extras.length?', '+opts.extras.join(', '):''})` : item.name;
+  const price = opts ? opts.price : item.price;
+  if(!cart[cartKey]) cart[cartKey]={...item, cartKey, displayName, price, qty:0};
+  cart[cartKey].qty++;
+  updateCart();
+  saveCartToStorage();
+  showToast(`✅ ${displayName} added!`);
+  if(e){const b=e.target.closest('button');if(b){b.style.transform='scale(1.2)';setTimeout(()=>b.style.transform='',260);}}
+  const cc=document.getElementById('ccount');cc.style.transform='scale(1.5)';setTimeout(()=>cc.style.transform='',200);
+}
+function chgQty(cartKey, d){
+  if(!cart[cartKey])return;
+  cart[cartKey].qty+=d;
+  if(cart[cartKey].qty<=0)delete cart[cartKey];
+  updateCart();
+  saveCartToStorage();
+}
+function updateCart(){
+  const items=Object.values(cart);
+  const count=items.reduce((a,i)=>a+i.qty,0);
+  const sub=items.reduce((a,i)=>a+i.price*i.qty,0);
+  document.getElementById('ccount').textContent=count;
+  const el=document.getElementById('cart-list');
+  const ft=document.getElementById('cart-ft');
+  if(!items.length){
+    el.innerHTML='<div class="c-empty"><span class="c-empty-ico">🍕</span>Your cart is empty!<br/><small style="color:#bbb;">Add something delicious.</small></div>';
+    ft.style.display='none';
+  } else {
+    el.innerHTML=items.map(item=>`
+      <div class="citem">
+        <img src="${item.img}" alt="${item.name}"/>
+        <div class="citem-info">
+          <div class="citem-name">${item.displayName||item.name}</div>
+          <div class="citem-price">₹${item.price*item.qty}</div>
+        </div>
+        <div class="qty-ctl">
+          <button class="qb" onclick="chgQty('${item.cartKey||item.id}',-1)">−</button>
+          <span class="qn">${item.qty}</span>
+          <button class="qb" onclick="chgQty('${item.cartKey||item.id}',+1)">+</button>
+        </div>
+      </div>`).join('');
+    ft.style.display='block';
+    document.getElementById('ctot').textContent=`₹${sub}`;
+  }
+}
+
+// ── PIZZA CUSTOMISER ──
+let pizzaCustomiserItem=null;
+let selectedSize='regular';
+let selectedExtras=[];
+
+function openPizzaCustomiser(id, e){
+  pizzaCustomiserItem=MENU.find(i=>i.id===id);
+  selectedSize='regular';
+  selectedExtras=[];
+  renderCustomiser();
+  document.getElementById('pizza-ov').classList.add('on');
+  document.getElementById('pizza-modal').classList.add('on');
+  if(e){const b=e.target.closest('button');if(b){b.style.transform='scale(1.1)';setTimeout(()=>b.style.transform='',200);}}
+}
+function closePizzaCustomiser(){
+  document.getElementById('pizza-ov').classList.remove('on');
+  document.getElementById('pizza-modal').classList.remove('on');
+}
+function renderCustomiser(){
+  const item=pizzaCustomiserItem;
+  const idx=item.pizzaIdx;
+  // header
+  document.getElementById('pc-img').src=item.img;
+  document.getElementById('pc-name').textContent=item.name;
+  document.getElementById('pc-desc').textContent=item.desc||'';
+  // sizes
+  document.getElementById('pc-sizes').innerHTML=PIZZA_SIZES.map(s=>`
+    <button class="pc-size-btn ${s.key===selectedSize?'active':''}" onclick="selectSize('${s.key}')">
+      <span class="pc-size-name">${s.label}</span>
+      <span class="pc-size-slices">${s.slices}</span>
+      <span class="pc-size-price">₹${s.prices[idx]}</span>
+    </button>`).join('');
+  // extras
+  document.getElementById('pc-extras').innerHTML=PIZZA_EXTRAS.map(ex=>`
+    <button class="pc-extra-btn ${selectedExtras.includes(ex.key)?'active':''}" onclick="toggleExtra('${ex.key}')">
+      <span class="pc-extra-ico">${ex.key==='cheese'?'🧀':'🥦'}</span>
+      <span class="pc-extra-label">${ex.label}</span>
+      <span class="pc-extra-price">+₹${ex.prices[selectedSize]}</span>
+    </button>`).join('');
+  // total
+  updatePizzaTotal();
+}
+function selectSize(key){
+  selectedSize=key;
+  renderCustomiser();
+}
+function toggleExtra(key){
+  if(selectedExtras.includes(key)) selectedExtras=selectedExtras.filter(e=>e!==key);
+  else selectedExtras.push(key);
+  renderCustomiser();
+}
+function updatePizzaTotal(){
+  const item=pizzaCustomiserItem;
+  const idx=item.pizzaIdx;
+  const sizeData=PIZZA_SIZES.find(s=>s.key===selectedSize);
+  let total=sizeData.prices[idx];
+  selectedExtras.forEach(ek=>{
+    const ex=PIZZA_EXTRAS.find(e=>e.key===ek);
+    total+=ex.prices[selectedSize];
+  });
+  document.getElementById('pc-total').textContent=`₹${total}`;
+  document.getElementById('pc-add-btn').dataset.total=total;
+}
+function addPizzaToCart(){
+  const item=pizzaCustomiserItem;
+  const idx=item.pizzaIdx;
+  const sizeData=PIZZA_SIZES.find(s=>s.key===selectedSize);
+  let total=sizeData.prices[idx];
+  const extrasLabels=[];
+  selectedExtras.forEach(ek=>{
+    const ex=PIZZA_EXTRAS.find(e=>e.key===ek);
+    total+=ex.prices[selectedSize];
+    extrasLabels.push(ex.label);
+  });
+  addCart(item.id, null, {
+    size: selectedSize,
+    sizeLabel: sizeData.label+' ('+sizeData.slices+')',
+    extras: extrasLabels,
+    price: total
+  });
+  closePizzaCustomiser();
+}
+function toggleCart(){
+  document.getElementById('cart-ov').classList.toggle('on');
+  document.getElementById('cart-pn').classList.toggle('on');
+}
+
+// ── ORDER MODAL ──
+let orderType='delivery';
+function openOrderModal(){
+  document.getElementById('modal-ov').classList.add('on');
+  document.getElementById('order-modal').classList.add('on');
+  document.getElementById('modal-err').textContent='';
+  setTimeout(()=>document.getElementById('cust-name').focus(),350);
+}
+function closeOrderModal(){
+  document.getElementById('modal-ov').classList.remove('on');
+  document.getElementById('order-modal').classList.remove('on');
+}
+function selectType(type){
+  orderType=type;
+  ['delivery','pickup','dinein'].forEach(t=>document.getElementById('otype-'+t).classList.toggle('active',t===type));
+  const ag=document.getElementById('addr-group');
+  if(ag)ag.style.display=(type==='delivery')?'block':'none';
+}
+function confirmOrder(){
+  const name=document.getElementById('cust-name').value.trim();
+  const phone=document.getElementById('cust-phone').value.trim();
+  const addr=document.getElementById('cust-addr').value.trim();
+  const errEl=document.getElementById('modal-err');
+  if(!name){errEl.textContent='⚠️ Please enter your name.';document.getElementById('cust-name').focus();return;}
+  if(!phone||!/^\d{10}$/.test(phone)){errEl.textContent='⚠️ Please enter a valid 10-digit phone number.';document.getElementById('cust-phone').focus();return;}
+  if(orderType==='delivery'&&!addr){errEl.textContent='⚠️ Please enter your delivery address.';document.getElementById('cust-addr').focus();return;}
+  errEl.textContent='';
+  const items=Object.values(cart);
+  const sub=items.reduce((a,i)=>a+i.price*i.qty,0);
+  const lines=items.map(i=>`  • ${i.displayName||i.name} x${i.qty} = ₹${i.price*i.qty}`).join('\n');
+  const typeLabel=orderType==='delivery'?'🛵 Delivery':orderType==='pickup'?'🥡 Pickup':'🍽️ Dine In';
+  const dc=0; // No delivery charge
+  const addrLine=(orderType==='delivery'&&addr)?`📍 Address: ${addr}\n`:'';
+  const tableNote=orderType==='dinein'?'\n🪑 Please have a table ready!':'';
+
+  // ── Save to Firebase ──
+  if(window._saveOrderToFirebase){
+    window._saveOrderToFirebase({
+      customerName: name,
+      phone: phone,
+      address: addr||'',
+      orderType: orderType,
+      items: items.map(i=>({
+        name: i.displayName||i.name,
+        price: i.price,
+        qty: i.qty,
+        total: i.price*i.qty
+      })),
+      subtotal: sub,
+      total: sub
+    });
+  }
+
+  const msg=encodeURIComponent(
+`🍕 *New Order — Pizza Garage*
+━━━━━━━━━━━━━━━━
+👤 Name: ${name}
+📞 Phone: ${phone}
+${addrLine}🚚 Type: ${typeLabel}${tableNote}
+━━━━━━━━━━━━━━━━
+*Items Ordered:*
+${lines}
+━━━━━━━━━━━━━━━━
+Subtotal: ₹${sub}
+*Total: ₹${sub}*
+━━━━━━━━━━━━━━━━
+Please confirm my order! 🙏`);
+  window.open(`https://wa.me/919161996660?text=${msg}`,'_blank');
+  // clear cart after order
+  cart={};
+  saveCartToStorage();
+  updateCart();
+  closeOrderModal();
+  showToast('✅ Order sent! Thank you 🍕');
+}
+
+// ── TOAST ──
+let tT;
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');
+  clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2400);
+}
+
+// ── CHATBOT ──
+let chatOpen=false,history=[];
+const SYS=`You are a friendly AI assistant for Pizza Garage, a popular cafe in Salempur, Deoria, India. Help with menu, prices, recommendations, WhatsApp ordering. Be warm, short (2-3 sentences), use food emojis.
+Menu: Margherita ₹99, Cheese & Corn ₹119, Hot & Spicy ₹129, Paneer Makhani ₹139, Farmhouse Pizza ₹149, Paneer Schezwan ₹139. Burgers: Veg ₹50, Paneer ₹60, Cheese ₹80, Rockstar ₹99, Double Cheese ₹99. Sandwiches ₹60-₹80. Fries ₹70-₹99. Garlic Bread ₹90-₹119. Chinese ₹89-₹99. Coffee ₹45-₹89. Shakes ₹80-₹99. Pav Bhaji ₹79, Pasta ₹80-₹99, Maggi ₹60, Choco Lava Cake ₹60. Free delivery. Orders via WhatsApp.`;
+function toggleChat(){
+  chatOpen=!chatOpen;
+  document.getElementById('cwin').classList.toggle('open',chatOpen);
+  const fab=document.getElementById('cfab');
+  fab.classList.toggle('open',chatOpen);
+  fab.innerHTML=chatOpen?'✕':'<div class="fpulse"></div>💬';
+  if(chatOpen&&!history.length){
+    appendMsg('bot','👋 Hey! Welcome to Pizza Garage, Salempur! I\'m your AI assistant. Ask me anything about our menu or how to order! 🍕☕');
+    history.push({role:'assistant',content:'Hey! Welcome to Pizza Garage!'});
+  }
+}
+function appendMsg(type,text){
+  const el=document.getElementById('cmsgs'),d=document.createElement('div');
+  d.className=`msg ${type}`;d.textContent=text;el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+function appendTyping(){
+  const el=document.getElementById('cmsgs'),d=document.createElement('div');
+  d.className='msg typing';d.id='tdot';
+  d.innerHTML='<div class="tdots"><span></span><span></span><span></span></div>';
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+async function sendMsg(){
+  const inp=document.getElementById('cinput'),text=inp.value.trim();
+  if(!text)return;inp.value='';appendMsg('user',text);
+  history.push({role:'user',content:text});appendTyping();
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYS,messages:history})
+    });
+    const data=await res.json();
+    const reply=data.content?.map(b=>b.text||'').join('')||'Sorry, try again!';
+    document.getElementById('tdot')?.remove();appendMsg('bot',reply);
+    history.push({role:'assistant',content:reply});
+  }catch(e){document.getElementById('tdot')?.remove();appendMsg('bot','Oops! Something went wrong 🙏');}
+}
+
+// ── INIT ──
+renderSellers();renderReviews();renderCats();renderMenu();updateCart();
+
+// ════════════════════════════════════════
+//  PWA — SERVICE WORKER + INSTALL
+// ════════════════════════════════════════
+let deferredPrompt = null;
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isPreview = () => location.hostname.includes('claudeusercontent.com');
+
+const installBtn = document.getElementById('install-nav-btn');
+const pwaBanner  = document.getElementById('pwa-banner');
+const iosHint    = document.getElementById('ios-hint');
+
+// ── Register SW ──
+if ('serviceWorker' in navigator && !isPreview()) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('[PWA] SW registered ✅');
+        reg.addEventListener('updatefound', () => {
+          reg.installing.addEventListener('statechange', function() {
+            if (this.state === 'installed' && navigator.serviceWorker.controller)
+              showToast('🆕 App updated! Please refresh.');
+          });
+        });
+      })
+      .catch(e => console.warn('[PWA] SW failed:', e.message));
+  });
+}
+
+// ── Hide button if already installed ──
+if (isStandalone()) {
+  installBtn.style.display = 'none';
+} else if (isIos()) {
+  // iOS — always show button, tapping shows instructions
+  installBtn.style.display = 'flex';
+  if (!localStorage.getItem('ios-hint-dismissed')) {
+    setTimeout(() => iosHint.classList.add('show'), 6000);
+  }
+} else {
+  // Android/Chrome — show button, hide until prompt ready
+  // Keep visible but dimmed until prompt fires
+  installBtn.style.opacity = '0.5';
+  installBtn.title = 'Install App (loading...)';
+}
+
+// ── Capture install prompt (Android/Chrome) ──
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Now fully activate the button
+  installBtn.style.display = 'flex';
+  installBtn.style.opacity = '1';
+  installBtn.title = 'Install App';
+  // Show bottom banner too after 6s
+  if (!localStorage.getItem('pwa-dismissed')) {
+    setTimeout(() => pwaBanner.classList.add('show'), 6000);
+  }
+});
+
+// ── Successfully installed ──
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+  pwaBanner.classList.remove('show');
+  showToast('🎉 Pizza Garage installed on your device!');
+  localStorage.setItem('pwa-dismissed', '1');
+});
+
+function installPWA() {
+  if (deferredPrompt) {
+    // Android/Chrome native prompt
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(choice => {
+      if (choice.outcome === 'accepted') showToast('🎉 Installing Pizza Garage...');
+      deferredPrompt = null;
+      pwaBanner.classList.remove('show');
+    });
+  } else if (isIos()) {
+    // iOS — show step by step
+    iosHint.classList.toggle('show');
+  } else {
+    // Fallback — browser hasn't fired prompt yet, guide user
+    showToast('💡 Open in Chrome & visit again to install!');
+  }
+}
+
+function dismissPWA() {
+  pwaBanner.classList.remove('show');
+  localStorage.setItem('pwa-dismissed', '1');
+}
+function dismissIosHint() {
+  iosHint.classList.remove('show');
+  localStorage.setItem('ios-hint-dismissed', '1');
+}
+</script>
+</body>
+</html>

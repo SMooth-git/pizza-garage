@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Anyone can CREATE an order (customers placing orders)
+    match /orders/{orderId} {
+      allow create: if true;
+      // Only authenticated admin can read/update/delete
+      allow read, update, delete: if request.auth != null;
+    }
+  }
+}
